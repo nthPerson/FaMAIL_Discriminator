@@ -1,0 +1,13 @@
+{
+  "n_pos": 5000,
+  "n_neg": 5000,
+  "strategy_pos": "uniform",
+  "strategy_neg": "uniform",
+  "semi_hard_heuristic": "length_diff",
+  "percentile_len": 95,
+  "pad_mode": "right",
+  "truncate_mode": "tail",
+  "mini_n_pos": 100,
+  "mini_n_neg": 100,
+  "mini_max_traj_per_expert": 2
+}
