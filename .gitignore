@@ -1,3 +1,5 @@
+*__pycache__*
+
 create_traj_pair_dataset/datasets/*/*.npz
 create_traj_pair_dataset/datasets/*/*.pt
 create_traj_pair_dataset/datasets/*/*.npz

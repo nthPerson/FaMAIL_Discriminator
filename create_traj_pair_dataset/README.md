@@ -35,13 +35,13 @@ pip install torch
 ## Basic Usage
 From repository root:
 ```bash
-python -m discriminator.cli --data discriminator/source_data/all_trajs.pkl --n-pos 8000 --n-neg 8000
+python -m create_traj_pair_dataset.cli --data create_traj_pair_dataset/source_data/all_trajs.pkl --n-pos 8000 --n-neg 8000
 ```
-Outputs to `discriminator/datasets/<timestamp>_s<seed>_<hash>/`.
+Outputs to `create_traj_pair_dataset/datasets/<timestamp>_s<seed>_<hash>/`.
 
 ## Mini Mode (Fast Sanity Check)
 ```bash
-python -m discriminator.cli --data discriminator/source_data/all_trajs.pkl --mini --inspect-k 30
+python -m create_traj_pair_dataset.cli --data create_traj_pair_dataset/source_data/all_trajs.pkl --mini --inspect-k 30
 ```
 Mini mode automatically reduces per-expert trajectories (default 2) and pair counts (see `config_defaults.json`).
 
@@ -83,7 +83,7 @@ import torch
 import json
 from pathlib import Path
 
-run_dir = Path('discriminator/datasets/...')
+run_dir = Path('create_traj_pair_dataset/datasets/...')
 # Torch tensors
 pairs = torch.load(run_dir / 'pairs.pt')
 print(pairs['x1'].shape, pairs['label'].shape)
@@ -101,7 +101,7 @@ print(meta['counts'])
 Launch the interactive inspector (requires `streamlit`, `plotly`, and `scikit-learn` for PCA):
 ```bash
 pip install streamlit plotly scikit-learn
-streamlit run discriminator/streamlit_app.py -- --dataset discriminator/datasets/<run_dir>
+streamlit run create_traj_pair_dataset/streamlit_app.py -- --dataset create_traj_pair_dataset/datasets/<run_dir>
 ```
 If `--dataset` is omitted, you can pick a run from a dropdown.
 
