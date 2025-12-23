@@ -46,6 +46,20 @@ def load_meta(path: Path):
     return json.loads(path.read_text())
 
 
+@st.cache_data(show_spinner=False)
+def load_inspection(run_dir: Path):
+    insp_dir = run_dir / "inspection"
+    index_path = insp_dir / "index.json"
+    if not index_path.exists():
+        return None
+    index_data = json.loads(index_path.read_text())
+    sample_path = insp_dir / index_data.get("sample_pairs", "sample_pairs.json")
+    schema_path = insp_dir / index_data.get("schema", "schema.md")
+    sample_pairs = json.loads(sample_path.read_text()) if sample_path.exists() else []
+    schema_md = schema_path.read_text() if schema_path.exists() else ""
+    return {"index": index_data, "sample_pairs": sample_pairs, "schema": schema_md}
+
+
 def percentile_stats(arr: np.ndarray, pcts=(50, 75, 90, 95, 99)):
     return {f"p{p}": float(np.percentile(arr, p)) for p in pcts}
 
@@ -147,6 +161,21 @@ def render_pair_view(npz, meta, idx: int):
         st.write(x2[:trunc])
 
 
+def render_pair_side_by_side(npz, meta, dataset_idx: int, feature_idx: int):
+    a_mask = npz["mask1"][dataset_idx]
+    b_mask = npz["mask2"][dataset_idx]
+    a_len = int(a_mask.sum())
+    b_len = int(b_mask.sum())
+    x1 = npz["x1"][dataset_idx][:a_len, feature_idx]
+    x2 = npz["x2"][dataset_idx][:b_len, feature_idx]
+    import plotly.graph_objects as go
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=np.arange(a_len), y=x1, mode="lines+markers", name="A", line=dict(color="#1f77b4")))
+    fig.add_trace(go.Scatter(x=np.arange(b_len), y=x2, mode="lines+markers", name="B", line=dict(color="#ff7f0e")))
+    fig.update_layout(xaxis_title="Timestep", yaxis_title=f"Feature[{feature_idx}]", margin=dict(l=0, r=0, t=30, b=0))
+    return fig, a_len, b_len
+
+
 def main_streamlit(dataset_arg: str | None):
     st.title("HuMID Trajectory Pair Dataset Inspector")
     st.caption("Explore matching vs non-matching trajectory pairs and dataset statistics.")
@@ -181,6 +210,7 @@ def main_streamlit(dataset_arg: str | None):
 
     meta = load_meta(meta_path)
     npz = load_npz(npz_path)
+    inspection = load_inspection(chosen)
 
     # Sidebar controls
     st.sidebar.header("Navigation")
@@ -199,12 +229,42 @@ def main_streamlit(dataset_arg: str | None):
         actual_idx = int(random.choice(indices)) if indices.size else 0
     st.sidebar.write(f"Viewing actual pair id: {actual_idx}")
 
-    tabs = st.tabs(["Overview", "Pair", "Report.md"])
+    tabs = st.tabs(["Overview", "Pair", "Inspection", "Report.md"])
     with tabs[0]:
         render_stats(meta, npz)
     with tabs[1]:
         render_pair_view(npz, meta, actual_idx)
     with tabs[2]:
+        if inspection is None:
+            st.info("No inspection folder found in this run.")
+        else:
+            st.subheader("Inspection Files")
+            st.caption("Loaded from inspection/index.json, sample_pairs.json, schema.md")
+            st.json(inspection["index"])
+            if inspection.get("schema"):
+                with st.expander("Schema (schema.md)", expanded=False):
+                    st.markdown(inspection["schema"])
+            sample_pairs = inspection.get("sample_pairs", [])
+            st.write(f"Sample pairs available: {len(sample_pairs)}")
+            if not sample_pairs:
+                st.warning("No sample_pairs.json found or it is empty.")
+            else:
+                label_filter = st.selectbox("Sample label filter", ["All", "Positives", "Negatives"], key="insp_label_filter")
+                filtered = [p for p in sample_pairs if label_filter == "All" or (p["label"] == 1 if label_filter == "Positives" else p["label"] == 0)]
+                if not filtered:
+                    st.warning("No samples match this filter.")
+                else:
+                    choices = [f"#{i} | global {p['dataset_index']} | label {p['label']} | A:{p['a_expert']} B:{p['b_expert']}" for i, p in enumerate(filtered)]
+                    sel_idx = st.selectbox("Select sample", list(range(len(filtered))), format_func=lambda i: choices[i])
+                    selected = filtered[int(sel_idx)]
+                    st.write({k: selected[k] for k in selected})
+                    ds_idx = int(selected["dataset_index"])
+                    feat_max = int(meta["state_dim"]) - 1
+                    feature_idx = st.slider("Feature index for side-by-side plot", 0, feat_max, min(1, feat_max))
+                    fig, a_len, b_len = render_pair_side_by_side(npz, meta, ds_idx, feature_idx)
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.caption(f"Pair lengths — A: {a_len}, B: {b_len}; label: {selected['label']} (1=matching, 0=non-matching).")
+    with tabs[3]:
         report_path = chosen / "report.md"
         if report_path.exists():
             st.markdown(report_path.read_text())

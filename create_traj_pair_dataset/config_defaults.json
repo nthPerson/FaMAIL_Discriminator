@@ -7,6 +7,8 @@
   "percentile_len": 95,
   "pad_mode": "right",
   "truncate_mode": "tail",
+  "state_start": null,
+  "state_end": null,
   "mini_n_pos": 100,
   "mini_n_neg": 100,
   "mini_max_traj_per_expert": 2

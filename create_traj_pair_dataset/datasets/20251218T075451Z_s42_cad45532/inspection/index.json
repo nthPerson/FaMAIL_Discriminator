@@ -1,0 +1,7 @@
+{
+  "sample_pairs": "sample_pairs.json",
+  "schema": "schema.md",
+  "count": 30,
+  "has_negatives": true,
+  "has_positives": true
+}

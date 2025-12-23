@@ -1,0 +1,26 @@
+{
+  "config": {
+    "n_pos": 100,
+    "n_neg": 100,
+    "strategy_pos": "uniform",
+    "strategy_neg": "uniform",
+    "semi_hard_heuristic": "length_diff",
+    "percentile_len": 95,
+    "pad_mode": "right",
+    "truncate_mode": "tail",
+    "state_start": 0,
+    "state_end": 4,
+    "mini": true,
+    "inspect_k": 30,
+    "seed": 42
+  },
+  "seed": 42,
+  "fingerprint": "cad455324e28c6b5ec7593463ba044968c2f078f22bb4a194d3bb31df6712232",
+  "counts": {
+    "total_pairs": 200,
+    "positives": 100,
+    "negatives": 100
+  },
+  "target_len": 37,
+  "state_dim": 4
+}

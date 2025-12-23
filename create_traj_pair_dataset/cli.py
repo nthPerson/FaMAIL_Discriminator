@@ -26,6 +26,8 @@ def parse_args():
     p.add_argument("--percentile-len", type=int, default=None, help="Percentile for target length padding/truncation")
     p.add_argument("--pad-mode", type=str, default=None, choices=["right", "center"], help="Padding mode")
     p.add_argument("--truncate-mode", type=str, default=None, choices=["tail", "head", "center"], help="Truncation mode when length exceeds target")
+    p.add_argument("--state-start", type=int, default=None, help="Inclusive start index for state dimension slice")
+    p.add_argument("--state-end", type=int, default=None, help="Exclusive end index for state dimension slice")
     p.add_argument("--seed", type=int, default=42, help="RNG seed for reproducibility")
     p.add_argument("--mini", action="store_true", help="Generate a small representative sample dataset")
     p.add_argument("--inspect-k", type=int, default=50, help="Number of pairs to include in inspection JSON")
@@ -52,6 +54,8 @@ def main():
         "percentile_len": args.percentile_len if args.percentile_len is not None else defaults["percentile_len"],
         "pad_mode": args.pad_mode or defaults["pad_mode"],
         "truncate_mode": args.truncate_mode or defaults["truncate_mode"],
+        "state_start": args.state_start if args.state_start is not None else defaults.get("state_start"),
+        "state_end": args.state_end if args.state_end is not None else defaults.get("state_end"),
         "mini": bool(args.mini),
         "inspect_k": int(args.inspect_k),
         "seed": int(args.seed),
@@ -65,8 +69,22 @@ def main():
     # Load data
     ds = load_dataset(args.data)
 
+    # Optional state-dimension slicing
+    def slice_state_dims(expert_trajs, start, end):
+        sample_traj = next(iter(expert_trajs.values()))[0]
+        D = sample_traj.shape[1]
+        s = 0 if start is None else start
+        e = D if end is None else end
+        if s < 0 or e < 1 or s >= e or e > D:
+            raise ValueError(f"Invalid state slice [{s}:{e}] for state dimension {D}")
+        sliced = {}
+        for eid, lst in expert_trajs.items():
+            sliced[eid] = [traj[:, s:e] for traj in lst]
+        return sliced
+
     # Optionally reduce per-expert trajectories in mini mode
     expert_trajs = ds.expert_trajs
+    expert_trajs = slice_state_dims(expert_trajs, eff["state_start"], eff["state_end"])
     if eff["mini"]:
         reduced = {}
         max_per = defaults.get("mini_max_traj_per_expert", 2)
@@ -90,7 +108,7 @@ def main():
     save_torch(out_dir, arrays)
     write_meta(out_dir, eff, arrays, fingerprint, eff["seed"]) 
     write_report(out_dir, arrays, arrays["meta"]) 
-    write_inspection(out_dir, arrays, arrays["meta"], eff["inspect_k"]) 
+    write_inspection(out_dir, arrays, arrays["meta"], eff["inspect_k"], eff["seed"])
 
     print(f"Wrote dataset to {out_dir}")
 

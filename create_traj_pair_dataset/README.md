@@ -9,10 +9,11 @@ Generates matching (same expert) and non-matching (different expert) trajectory 
 - Semi-hard heuristic choices: `length_diff` (closest lengths) or `mean_cosine` (similar mean state vectors).
 - Deterministic, seed-based reproducibility with config fingerprint & metadata.
 - Padding & truncation configurable by percentile length, mode, and strategy.
+- Optional state-dimension slicing so you can train on any contiguous subset of the 126 state features.
 - Dual output formats: compressed NumPy (`pairs.npz`) and Torch (`pairs.pt`).
 - Rich metadata (`meta.json`) and quick stats report (`report.md`).
-- Human inspection subset (`inspection/sample_pairs.json` + schema) for qualitative review.
-- Streamlit app (`streamlit_app.py`) for interactive exploration (stats, pair filtering, PCA visualization).
+- Human inspection subset (`inspection/sample_pairs.json` + schema) now includes both positive and negative samples and records the global dataset index for each pair.
+- Streamlit app (`streamlit_app.py`) for interactive exploration (stats, pair filtering, PCA visualization, inspection metadata, and side-by-side pair plots).
 
 ## Data Assumptions
 `all_trajs.pkl` structure:
@@ -56,6 +57,8 @@ Mini mode automatically reduces per-expert trajectories (default 2) and pair cou
 | `--percentile-len` | Target length percentile for padding/truncation | 95 |
 | `--pad-mode` | Padding placement | right |
 | `--truncate-mode` | Truncation slice | tail |
+| `--state-start` | Inclusive start index for state slice (defaults to 0) | none |
+| `--state-end` | Exclusive end index for state slice (defaults to full dim) | none |
 | `--inspect-k` | Pairs exported for inspection | 50 |
 | `--mini` | Enable representative downsized mode | off |
 | `--seed` | RNG seed | 42 |
@@ -72,7 +75,7 @@ See `config_defaults.json` for mini-mode overrides.
   inspection/
     sample_pairs.json
     schema.md
-    index.json
+    index.json       # references sample_pairs/schema; notes presence of positives/negatives and counts
 ```
 
 ## Loading Example (PyTorch)
@@ -108,6 +111,8 @@ If `--dataset` is omitted, you can pick a run from a dropdown.
 Features:
 - Overview tab: summary metrics + length histograms and percentile stats.
 - Pair tab: select / filter by label, view trajectory lengths, mean feature cosine, optional PCA 2D projection, raw snippet preview.
+- Inspection tab: shows inspection metadata (index.json), schema, and the sampled pairs (both positives and negatives) with global dataset indices.
+- Side-by-side plot: pick a sampled pair and visualize a chosen feature index across the two trajectories.
 - Report tab: renders `report.md`.
 
 Use the sidebar to filter positives/negatives, select index numerically or choose a random pair.
