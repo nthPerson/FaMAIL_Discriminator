@@ -1,6 +1,8 @@
 *__pycache__*
 
-create_traj_pair_dataset/datasets/*/*.npz
-create_traj_pair_dataset/datasets/*/*.pt
-create_traj_pair_dataset/datasets/*/*.npz
+# Source data
 *all_trajs.pkl
+
+# Generated datasets
+discriminator/datasets/*
+!discriminator/datasets/README.md
