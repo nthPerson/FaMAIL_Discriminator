@@ -104,7 +104,7 @@ def _build_config() -> Tuple[GenerationConfig, Dict, int]:
         padding = st.selectbox(
             "Padding / truncation strategy",
             options=["pad_to_longer", "truncate_to_shorter", "fixed_length"],
-            index=1,
+            index=0,
         )
         fixed_length = None
         if padding == "fixed_length":
