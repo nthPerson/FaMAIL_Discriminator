@@ -26,17 +26,31 @@ import sys
 
 import torch
 
-# Add parent directory to path for imports
+# Add parent directory to path for imports when running as package
+# But also support running directly from model/ directory
 sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
 
-from model import (
-    SiameseLSTMDiscriminator,
-    TrajectoryPairDataset,
-    load_dataset_from_directory,
-    Trainer,
-    TrainingConfig
-)
-from model.dataset import create_train_val_split, create_data_loaders
+# Try package import first, fall back to local imports
+try:
+    from model import (
+        SiameseLSTMDiscriminator,
+        TrajectoryPairDataset,
+        load_dataset_from_directory,
+        Trainer,
+        TrainingConfig
+    )
+    from model.dataset import create_train_val_split, create_data_loaders
+except ImportError:
+    # Running from within model/ directory
+    from model import SiameseLSTMDiscriminator
+    from dataset import (
+        TrajectoryPairDataset,
+        load_dataset_from_directory,
+        create_train_val_split,
+        create_data_loaders
+    )
+    from trainer import Trainer, TrainingConfig
 
 
 def parse_args():

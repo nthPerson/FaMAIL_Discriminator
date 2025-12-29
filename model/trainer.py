@@ -223,8 +223,7 @@ class Trainer:
                 self.optimizer,
                 mode='min',
                 factor=self.config.scheduler_factor,
-                patience=self.config.scheduler_patience,
-                verbose=True
+                patience=self.config.scheduler_patience
             )
         elif self.config.scheduler == "cosine":
             return CosineAnnealingLR(
@@ -566,7 +565,11 @@ def load_model_from_checkpoint(
     Returns:
         Tuple of (model, checkpoint_dict)
     """
-    from .model import SiameseLSTMDiscriminator
+    # Support both package and direct imports
+    try:
+        from .model import SiameseLSTMDiscriminator
+    except ImportError:
+        from model import SiameseLSTMDiscriminator
     
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"

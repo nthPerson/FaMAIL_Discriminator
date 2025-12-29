@@ -32,7 +32,7 @@ from generation import (
 
 st.set_page_config(page_title="Trajectory Pair Dataset Generator", layout="wide")
 
-DEFAULT_DATA_PATH = Path("/home/robert/FAMAIL/discriminator/create_traj_pair_dataset/source_data/all_trajs.pkl").resolve()
+DEFAULT_DATA_PATH = Path("/home/robert/FAMAIL/discriminator/dataset_generation_tool/source_data/all_trajs.pkl").resolve()
 
 
 def _build_config() -> Tuple[GenerationConfig, Dict, int]:
@@ -943,6 +943,14 @@ def main():
                         mask2=dataset["mask2"][val_idx]
                     )
                     
+                    # Compute positive/negative counts per split
+                    train_labels = dataset["label"][train_idx]
+                    val_labels = dataset["label"][val_idx]
+                    n_train_pos = int((train_labels == 1).sum())
+                    n_train_neg = int((train_labels == 0).sum())
+                    n_val_pos = int((val_labels == 1).sum())
+                    n_val_neg = int((val_labels == 0).sum())
+                    
                     # Save metadata
                     save_metadata = {
                         **metadata,
@@ -950,6 +958,10 @@ def main():
                             "val_split": val_split,
                             "n_train": n_train,
                             "n_val": n_val,
+                            "n_train_pos": n_train_pos,
+                            "n_train_neg": n_train_neg,
+                            "n_val_pos": n_val_pos,
+                            "n_val_neg": n_val_neg,
                             "train_file": "train.npz",
                             "val_file": "val.npz"
                         }
@@ -960,8 +972,8 @@ def main():
                     st.success(f"✅ Dataset saved to: `{save_path}`")
                     st.markdown(f"""
                     **Saved files:**
-                    - `train.npz`: {n_train:,} samples ({100 - val_split*100:.0f}%)
-                    - `val.npz`: {n_val:,} samples ({val_split*100:.0f}%)
+                    - `train.npz`: {n_train:,} samples ({100 - val_split*100:.0f}%) — {n_train_pos:,} pos, {n_train_neg:,} neg
+                    - `val.npz`: {n_val:,} samples ({val_split*100:.0f}%) — {n_val_pos:,} pos, {n_val_neg:,} neg
                     - `metadata.json`: Configuration and statistics
                     
                     **Use with training:**

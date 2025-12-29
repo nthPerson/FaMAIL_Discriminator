@@ -427,8 +427,10 @@ def render_checkpoint_explorer():
 
 def start_training(dataset_path: Path, params: Dict, experiment_name: str) -> None:
     """Start training in background (simplified for Streamlit)."""
-    from model import SiameseLSTMDiscriminator, TrajectoryPairDataset, Trainer, TrainingConfig
-    from dataset import create_data_loaders, load_dataset_from_directory
+    # Import from local modules (when running from model/ directory)
+    from model import SiameseLSTMDiscriminator
+    from dataset import TrajectoryPairDataset, create_data_loaders, load_dataset_from_directory
+    from trainer import Trainer, TrainingConfig
     
     # Load data
     datasets = load_dataset_from_directory(dataset_path)
@@ -591,8 +593,8 @@ def main():
         if st.button("🔍 Evaluate Model", type="primary"):
             with st.spinner("Evaluating..."):
                 try:
-                    from model import TrajectoryPairDataset
-                    from trainer import load_model_from_checkpoint, Trainer
+                    from dataset import TrajectoryPairDataset
+                    from trainer import load_model_from_checkpoint
                     from torch.utils.data import DataLoader
                     
                     # Load model
