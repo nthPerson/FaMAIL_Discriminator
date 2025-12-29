@@ -3,4 +3,4 @@
 create_traj_pair_dataset/datasets/*/*.npz
 create_traj_pair_dataset/datasets/*/*.pt
 create_traj_pair_dataset/datasets/*/*.npz
-create_traj_pair_dataset/source_data/all_trajs.pkl
+*all_trajs.pkl
